@@ -1,0 +1,24 @@
+h1 {
+    color: indigo;
+    text-align: center;
+}
+
+form.login_form {
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: teal;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid black;
+}
+
+.upload_form {
+    max-width: 450px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.error {
+    color: red;
+}

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!--    бутстрап подключается до наших стилей-->
+    <link rel="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"/>
+    <!--    CDN is Content Delivery Network, Сеть Доставки Содержания-->
+    <link rel="stylesheet" href="static/css/style.css">
+<!--    // указывая в ЦСС "form", уточняем, что класс относится к форме только.-->
+    <title>Форма регистрации</title>
+</head>
+<body>
+<h1>Регистрация в системе</h1>
+
+<div>
+    <form class="login_form" method="post" enctype="multipart/form-data">
+        <!--  GET просто передал бы все данные в одной строке запроса    -->
+        <!-- ? action="/register"-->
+        <div style="margin-bottom: 10px">
+            <input type="email" class="form-control" id="email" name="email" placeholder="введите мыло"
+                    aria-describedby="emailHelp" required>
+        </div>
+        <!-- name нужен для идентификации элемента формы       -->
+        <!-- назначил эмейл - будет проверять на валидность, назначим пароль - он будет маскироваться,-->
+        <!-- назначим скрытый - не будет виден (используется для сличения капчи), телефон - валидируется как телефон -->
+        <!-- кнопка - будет кнопка (нужно ещё название тогда), галочка - будет галочка, у нас кстати ↑ Бутстрап фигачит их-->
+        <div>
+            <input type="password" class="form-control" id="password" name="password" placeholder="введите пароль" required>
+        </div>
+        <label for="levelSelect">Уровень владения ПК</label>
+        <select class="form-control" name=level"" id="levelSelect">
+            <option value="">Высокий</option>
+            <option value="">Средний</option>
+            <option value="">Низкий</option>
+        </select>
+        <div class="form-group">
+            <label for="about">Расскажите о себе</label>
+            <textarea class="form-control" id="about" name="about" rows="5" placeholder="что-нибудь в тему"></textarea>
+            <!-- в отличие от текстового поля, текстообласть позволяет вводить многострочные тексты-->
+        </div>
+        <div class="form-group" id="form-group">
+            <label for="form-group">укажите пол</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="gender" id="male" value="М" checked>
+                <!-- здесь значение передаётся явно формой    -->
+                <label class="form-check-label" for="male">Мужеский</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="gender" id="female" value="Ж" unchecked>
+                <label class="form-check-label" for="female">Женский</label>
+            </div>
+
+            <div>
+                <input type="file" id="avatar" name="avatar" enctype="multipart/form-data">
+
+            </div>
+
+            <div class="form-group form-check">
+                <input class="form-check-input" type="checkbox" name="accept" id="acceptRules">
+                <label class="form-check-label" for="acceptRules">Согласен с правилами</label>
+                <button class="button button-primary" type="submit">Зарегистрироваться</button>
+            </div>
+
+        </div>
+    </form>
+</div>
+</body>
+</html>
+

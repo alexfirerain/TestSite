@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% for trip in trippers %}
+        {{trip[0]}}. <a href="/trip/{{trip[0]}}">{{trip[1]}}</a><br>
+    {% endfor %}
+{% endblock %}
