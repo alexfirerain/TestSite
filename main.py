@@ -1,9 +1,17 @@
 import os, sqlite3
 
-from flask import Flask, url_for, request, render_template
+from flask import Flask, url_for, request, render_template, redirect
+from flask_login import LoginManager, login_user, logout_user
 from werkzeug.utils import secure_filename
 
 from crud import TripRepository
+
+from data import db_session
+from data.news import News
+from data.users import User
+from forms.loginform import LoginForm
+from forms.user import Register
+from flask_login import LoginManager, login_user, logout_user
 
 app = Flask(__name__)
 db = TripRepository('db/trippers.sqlite', 'users')
@@ -31,6 +39,62 @@ def index():
     return render_template('index.html', **params)
 
 
+@app.route('/logout')
+def logout():
+    logout_user()
+    return redirect('/')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.email == form.email.data).first()
+        if user and user.check_password(form.password.data):
+            login_user(user, remember=form.remember_me.data)
+            return redirect('/')
+        return render_template('login.html',
+                               message='Неверный логин или пароль',
+                               title='Ошибка авторизации',
+                               form=form)
+    return render_template('login.html', title='Авторизация', form=form)
+
+
+@app.route('/register', methods=['POST', 'GET'])
+def register():
+    form = Register()
+    if form.validate_on_submit():  # тоже самое, что и request.method == 'POST'
+        # если пароли не совпали
+        if form.password.data != form.password_again.data:
+            return render_template('register.html',
+                                   title='Регистрация',
+                                   message='Пароли не совпадают',
+                                   form=form)
+
+        db_sess = db_session.create_session()
+
+        # Если пользователь с таким E-mail в базе уже есть
+        if db_sess.query(User).filter(User.email == form.email.data).first():
+            return render_template('register.html',
+                                   title='Регистрация',
+                                   message='Такой пользователь уже есть',
+                                   form=form)
+        user = User(
+            name=form.name.data,
+            email=form.email.data,
+            about=form.about.data
+        )
+        user.set_password(form.password.data)
+        db_sess.add(user)
+        db_sess.commit()
+        return redirect('/login')
+    return render_template('register.html',
+                           title='Регистрация', form=form)
+
+
+
+
 @app.route('/about')
 def about():
     return render_template('about.html', title='О нас', user='посетитель')
@@ -39,7 +103,7 @@ def about():
 @app.route('/trip/')
 def get_all_trippers():
     all_trippers = db.read_all()
-    return render_template('trippers.html', title='<Командировочные', trippers=all_trippers) , '200 OK'
+    return render_template('trippers.html', title='<Командировочные', trippers=all_trippers), '200 OK'
 
 
 @app.route('/trip/<int:trip_id>')
@@ -99,7 +163,11 @@ def file_upload():
     return 'Ошибка загрузки', '400 BAD REQUEST'
 
 
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html', title='Неизвестная страница'), '404 NOT FOUND'
 
 
 if __name__ == '__main__':
+    db_session.global_init('db/test_site_db.sqlite')
     app.run(host='localhost', port=5000, debug=debug)
