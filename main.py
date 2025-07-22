@@ -1,7 +1,7 @@
 import os, sqlite3
 
 from flask import Flask, url_for, request, render_template, redirect
-from flask_login import LoginManager, login_user, logout_user
+from flask_login import LoginManager, login_user, logout_user, login_manager, current_user
 from werkzeug.utils import secure_filename
 
 from crud import TripRepository
@@ -14,7 +14,10 @@ from forms.user import Register
 from flask_login import LoginManager, login_user, logout_user
 
 app = Flask(__name__)
-db = TripRepository('db/trippers.sqlite', 'users')
+# db = TripRepository('db/trippers.sqlite', 'users')
+
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 debug = False
 app.config['UPLOAD_FOLDER'] = 'uploads/'
@@ -31,34 +34,40 @@ def allowed_file(filename: str) -> bool:
 @app.route('/')
 @app.route('/index')
 def index():
+    visitor = current_user.name if current_user.is_authenticated else 'Юзер'
     params = {
         'title': 'Приветствие',
-        'user': 'Юзер',
+        'user': visitor,
         'weather': 'погодка ништяк'
     }
     return render_template('index.html', **params)
+
+@login_manager.user_loader
+def load_user(user_id):
+    db_sess = db_session.create_session()
+    return db_sess.query(User).get(user_id)
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    l_form = LoginForm()
+    if l_form.validate_on_submit():
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.email == l_form.email.data).first()
+        if user and user.check_password(l_form.password.data):
+            login_user(user, remember=l_form.remember_me.data)
+            return redirect('/')
+        return render_template('login.html',
+                               message='Неверный логин или пароль',
+                               title='Ошибка авторизации',
+                               form=l_form)
+    return render_template('login.html', title='Авторизация', form=l_form)
 
 
 @app.route('/logout')
 def logout():
     logout_user()
     return redirect('/')
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.email == form.email.data).first()
-        if user and user.check_password(form.password.data):
-            login_user(user, remember=form.remember_me.data)
-            return redirect('/')
-        return render_template('login.html',
-                               message='Неверный логин или пароль',
-                               title='Ошибка авторизации',
-                               form=form)
-    return render_template('login.html', title='Авторизация', form=form)
 
 
 @app.route('/register', methods=['POST', 'GET'])
@@ -100,27 +109,27 @@ def about():
     return render_template('about.html', title='О нас', user='посетитель')
 
 
-@app.route('/trip/')
-def get_all_trippers():
-    all_trippers = db.read_all()
-    return render_template('trippers.html', title='<Командировочные', trippers=all_trippers), '200 OK'
-
-
-@app.route('/trip/<int:trip_id>')
-def get_tripper(trip_id=None):
-    if trip_id is None:
-        return get_all_trippers()
-    else:
-        tripper = db.read_by_id(trip_id)
-        params = {
-            "id": tripper[0],
-            "name": tripper[1],
-            "destination": tripper[2],
-            "costs": tripper[3],
-            "since": tripper[4],
-            "till": tripper[5]
-        }
-        return render_template('tripper.html', title='<Командировочные', **params), '200 OK'
+# @app.route('/trip/')
+# def get_all_trippers():
+#     all_trippers = db.read_all()
+#     return render_template('trippers.html', title='<Командировочные', trippers=all_trippers), '200 OK'
+#
+#
+# @app.route('/trip/<int:trip_id>')
+# def get_tripper(trip_id=None):
+#     if trip_id is None:
+#         return get_all_trippers()
+#     else:
+#         tripper = db.read_by_id(trip_id)
+#         params = {
+#             "id": tripper[0],
+#             "name": tripper[1],
+#             "destination": tripper[2],
+#             "costs": tripper[3],
+#             "since": tripper[4],
+#             "till": tripper[5]
+#         }
+#         return render_template('tripper.html', title='<Командировочные', **params), '200 OK'
 
 
 @app.route('/form', methods=['GET', 'POST'])

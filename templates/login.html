@@ -6,10 +6,10 @@
     {{ form.csrf_token }}
 
     <p>
-        {{ form.username.label }} <br>
-        {{ form.username(class="form-control") }}<br>
+        {{ form.email.label }} <br>
+        {{ form.email(class="form-control") }}<br>
 
-        {% for error in form.username.errors %}
+        {% for error in form.email.errors %}
             <div class="alert-danger" role="alert">{{error}}</div>
         {% endfor %}
     </p>

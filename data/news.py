@@ -1,5 +1,5 @@
 import datetime
-import sqlalchemy
+import sqlalchemy as sa
 from .db_session import SqlAlchemyBase
 from sqlalchemy import orm
 
@@ -7,19 +7,19 @@ from sqlalchemy import orm
 class News(SqlAlchemyBase):
     __tablename__ = 'news'
 
-    id = sqlalchemy.Column(sqlalchemy.Integer,
+    id = sa.Column(sa.Integer,
                            primary_key=True,
                            autoincrement=True)
-    title = sqlalchemy.Column(sqlalchemy.String,
+    title = sa.Column(sa.String,
                               nullable=True)
-    content = sqlalchemy.Column(sqlalchemy.String,
+    content = sa.Column(sa.String,
                                 nullable=True)
-    create_date = sqlalchemy.Column(sqlalchemy.DateTime,
+    create_date = sa.Column(sa.DateTime,
                                     default=datetime.datetime.now())
-    is_private = sqlalchemy.Column(sqlalchemy.Boolean,
+    is_private = sa.Column(sa.Boolean,
                                    default=True)
-    user_id = sqlalchemy.Column(sqlalchemy.Integer,
-                                sqlalchemy.ForeignKey("users.id"))
+    user_id = sa.Column(sa.Integer,
+                                sa.ForeignKey("users.id"))
     user = orm.relationship('User')
 
     def __repr__(self):
