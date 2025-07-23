@@ -12,7 +12,6 @@
                 {{ error }}
             </p>
         {% endfor %}
-    </p>
     <p>
         {{ form.password.label }}<br>
         {{ form.password(class="form-control", type="password") }}<br>
@@ -20,8 +19,7 @@
             <p class="alert alert-danger" role="alert">
                 {{ error }}
             </p>
-        {% endfor %}
-    </p>
+    {% endfor %}
     <p>
         {{ form.password_again.label }}<br>
         {{ form.password_again(class="form-control", type="password") }}<br>
@@ -29,8 +27,7 @@
             <p class="alert alert-danger" role="alert">
                 {{ error }}
             </p>
-        {% endfor %}
-    </p>
+    {% endfor %}
     <p>
         {{ form.name.label }}<br>
         {{ form.name(class="form-control") }}<br>

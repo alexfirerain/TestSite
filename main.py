@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 from crud import TripRepository
 
 from data import db_session
-from data.news import News
+from data.consideration import Consideration
 from data.users import User
 from forms.loginform import LoginForm
 from forms.user import Register
