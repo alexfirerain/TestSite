@@ -7,10 +7,10 @@ from werkzeug.utils import secure_filename
 from crud import TripRepository
 
 from data import db_session
-from data.consideration import Consideration
-from data.users import User
+from data.consideration_model import Consideration
+from data.user_model import User
 from forms.loginform import LoginForm
-from forms.user import Register
+from forms.user_registering import Register
 from flask_login import LoginManager, login_user, logout_user
 
 app = Flask(__name__)
@@ -19,7 +19,7 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-debug = False
+debug = True
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 app.config['SECRET_KEY'] = ('В пуранической вистoрии пахтанья Молочного океана дэвы и aсуры'
                             'испольzовали Мандару как мутовку, а $ме́я Васуки — как верёвку!')
@@ -54,13 +54,15 @@ def login():
     if l_form.validate_on_submit():
         db_sess = db_session.create_session()
         user = db_sess.query(User).filter(User.email == l_form.email.data).first()
-        if user and user.check_password(l_form.password.data):
-            login_user(user, remember=l_form.remember_me.data)
-            return redirect('/')
-        return render_template('login.html',
+        if user:
+            if user.check_password(l_form.password.data):
+                login_user(user, remember=l_form.remember_me.data)
+                return redirect('/')
+            return render_template('login.html',
                                message='Неверный логин или пароль',
                                title='Ошибка авторизации',
                                form=l_form)
+        return redirect('/register', warnings='Неизвестный пользователь! Зарегистрировать?')
     return render_template('login.html', title='Авторизация', form=l_form)
 
 
@@ -72,34 +74,34 @@ def logout():
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
-    form = Register()
-    if form.validate_on_submit():  # тоже самое, что и request.method == 'POST'
+    r_form = Register()
+    if r_form.validate_on_submit():
         # если пароли не совпали
-        if form.password.data != form.password_again.data:
+        if r_form.password.data != r_form.password_again.data:
             return render_template('register.html',
                                    title='Регистрация',
                                    message='Пароли не совпадают',
-                                   form=form)
+                                   form=r_form)
 
         db_sess = db_session.create_session()
 
         # Если пользователь с таким E-mail в базе уже есть
-        if db_sess.query(User).filter(User.email == form.email.data).first():
+        if db_sess.query(User).filter(User.email == r_form.email.data).first():
             return render_template('register.html',
                                    title='Регистрация',
                                    message='Такой пользователь уже есть',
-                                   form=form)
+                                   form=r_form)
         user = User(
-            name=form.name.data,
-            email=form.email.data,
-            about=form.about.data
+            name=r_form.name.data,
+            email=r_form.email.data,
+            about=r_form.about.data
         )
-        user.set_password(form.password.data)
+        user.set_password(r_form.password.data)
         db_sess.add(user)
         db_sess.commit()
         return redirect('/login')
     return render_template('register.html',
-                           title='Регистрация', form=form)
+                           title='Регистрация', form=r_form)
 
 
 

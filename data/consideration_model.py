@@ -19,19 +19,12 @@ class Consideration(SqlAlchemyBase):
     """
     __tablename__ = 'considerations'
 
-    id = sa.Column(sa.Integer,
-                           primary_key=True,
-                           autoincrement=True)
-    title = sa.Column(sa.String,
-                              nullable=True)
-    content = sa.Column(sa.String,
-                                nullable=True)
-    create_date = sa.Column(sa.DateTime,
-                                    default=datetime.datetime.now())
-    is_private = sa.Column(sa.Boolean,
-                                   default=False)
-    origin = sa.Column(sa.Integer,
-                       sa.ForeignKey("users.id"))
+    id = sa.Column(sa.Integer, primary_key=True, autoincrement=True)
+    title = sa.Column(sa.String, nullable=True)
+    content = sa.Column(sa.String, nullable=True)
+    create_date = sa.Column(sa.DateTime, default=datetime.datetime.now())
+    is_private = sa.Column(sa.Boolean, default=False)
+    origin = sa.Column(sa.Integer, sa.ForeignKey("users.id"))
     publisher = orm.relationship('User')
 
     def __str__(self):

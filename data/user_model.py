@@ -11,14 +11,15 @@ class User(SqlAlchemyBase, UserMixin):
     __tablename__ = 'users'
 
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
-    name = sqlalchemy.Column(sqlalchemy.String)
+    name = sqlalchemy.Column(sqlalchemy.String, nullable=False)
     email = sqlalchemy.Column(sqlalchemy.String, index=True, unique=True, nullable=False)
     about = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     create_data = sqlalchemy.Column(sqlalchemy.DateTime, default=datetime.datetime.now())
     level = sqlalchemy.Column(sqlalchemy.Integer, default=0)
 
-    news = orm.relationship("News", back_populates='user')
+    considerations = orm.relationship("Consideration", back_populates='user')
+    files = orm.relationship("File", back_populates='user',)
 
     def set_username(self, newname):
         self.name = newname

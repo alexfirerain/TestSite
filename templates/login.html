@@ -24,16 +24,16 @@
     <p>&nbsp;</p>
 <!--  неразрывный пробел -->
 
-            {% for field in form if field.name != 'csrf_token' %}
-            <div>
-                {{ field.label() }}
-                {{ field }}
+<!--            {% for field in form if field.name != 'csrf_token' %}-->
+<!--            <div>-->
+<!--                {{ field.label() }}-->
+<!--                {{ field }}-->
 
-                {% for error in field.errors %}
-                    <div class="error" role="alert">{{ error }}</div>
-                {% endfor %}
-            </div>
-            {% endfor %}
+<!--                {% for error in field.errors %}-->
+<!--                    <div class="error" role="alert">{{ error }}</div>-->
+<!--                {% endfor %}-->
+<!--            </div>-->
+<!--            {% endfor %}-->
 
     </form>
 
