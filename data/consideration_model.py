@@ -14,7 +14,7 @@ class Consideration(SqlAlchemyBase):
         content (str): Содержание соображения.
         create_date (datetime): Момент публикации соображения.
         is_private (bool): Частное соображение (по умолчанию нет).
-        origin (int): Идентификатор соображающего пользователя.
+        author (int): Идентификатор соображающего пользователя.
         publisher (User): Связь с моделью User.
     """
     __tablename__ = 'considerations'
@@ -24,11 +24,12 @@ class Consideration(SqlAlchemyBase):
     content = sa.Column(sa.String, nullable=True)
     create_date = sa.Column(sa.DateTime, default=datetime.datetime.now())
     is_private = sa.Column(sa.Boolean, default=False)
-    origin = sa.Column(sa.Integer, sa.ForeignKey("users.id"))
-    publisher = orm.relationship('User')
+    author = sa.Column(sa.Integer, sa.ForeignKey("users.id"))
+
+    publisher = orm.relationship('User', back_populates='considerations')
 
     def __str__(self):
-        return f'<Соображение: {self.origin}@{self.create_date}>'
+        return f'<Соображение: {self.author}@{self.create_date}>'
 
     def __repr__(self):
         return f'<Соображение: {self.title}: {self.content}>'
