@@ -1,9 +1,10 @@
 import os, sqlite3
 
 from flask import Flask, url_for, request, render_template, redirect, flash
-from flask_login import LoginManager, login_user, logout_user, login_manager, current_user
+from flask_login import LoginManager, login_user, logout_user, login_manager, current_user, login_required
 from werkzeug.utils import secure_filename
 
+from forms.consider_form import ConsiderForm
 from site_repository import *
 
 from data import db_session
@@ -29,14 +30,16 @@ def allowed_pic_ext(filename: str) -> bool:
     return ('.' in filename
             and filename.rsplit('.', 1)[1].lower() in PIC_EXTENSIONS)
 
+def actual_appeal():
+    return current_user.name if current_user.is_authenticated else 'Гость'
+
 
 @app.route('/')
 @app.route('/index')
 def index():
-    visitor = current_user.name if current_user.is_authenticated else 'Юзер'
     params = {
         'title': 'Приветствие',
-        'user': visitor,
+        'user': actual_appeal(),
         'weather': 'погодка ништяк'
     }
     return render_template('index.html', **params)
@@ -110,64 +113,68 @@ def register():
 
 @app.route('/about')
 def about():
-    return render_template('about.html', title='О нас', user='посетитель')
+    return render_template('about.html',
+                           title='О нас', user=actual_appeal())
 
 
-def create_default_admin():
-    """Создать админа, если его нет"""
-    users = get_all_users()
-    if not users:
-        admin = User(
-            name="admin",
-            email="s@w.a",
-            about="тестовый админ",
-            level=1
+@app.route('/considerations', methods=['GET', 'POST'])
+def considerations():
+    posts = get_considerations_for_user(current_user.id)\
+                if current_user.is_authenticated \
+                    else get_all_public_considerations()
+
+    return render_template('considerations.html',
+                           title='Разные соображения', user=actual_appeal(), posts=posts)
+
+
+@app.route('/consider', methods=['GET', 'POST'])
+@login_required
+def consider():
+    # if not current_user.is_authenticated:
+    #     return redirect(url_for('login'))
+
+    c_form = ConsiderForm()
+    if c_form.validate_on_submit():
+        consideration = Consideration(
+            title=c_form.title.data,
+            content=c_form.content.data,
+            is_private=c_form.is_private.data,
+            # author=current_user.id
         )
-        admin.set_password("111")  # Можно поменять на любой пароль
-        save_user(admin)
-        print("Создан администратор по умолчанию")
+        thinker = get_user_by_id(current_user.id)
+        # print(thinker.id)
+        thinker.considerations.append(consideration)
+        # update_user(thinker)
+        if save_consideration(consideration):  # Предполагается, что у вас есть такой метод
+            flash('Ваша мысль сохранена!', 'success')
+            return redirect(url_for('considerations'))
+        else:
+            flash('Не удалось сохранить мысль.', 'danger')
+
+    return render_template('consider.html',
+                           title='Фиксация мысли',
+                           who=actual_appeal(),
+                           form=c_form)
 
 
-# @app.route('/trip/')
-# def get_all_trippers():
-#     all_trippers = db.read_all()
-#     return render_template('trippers.html', title='<Командировочные', trippers=all_trippers), '200 OK'
+
+# @app.route('/form', methods=['GET', 'POST'])
+# def form_test():
+#     if request.method == 'GET':
+#         with open('templates/form.html', 'r', encoding='utf-8') as h:
+#             return h.read()
+#     elif request.method == 'POST':
+#         result = request.form
+#         print(result['gender'])
+#         print(result['email'])
+#         print(result['accept'])
+#         print(result)
 #
+#         file = request.files['file']
+#         file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
 #
-# @app.route('/trip/<int:trip_id>')
-# def get_tripper(trip_id=None):
-#     if trip_id is None:
-#         return get_all_trippers()
-#     else:
-#         tripper = db.read_by_id(trip_id)
-#         params = {
-#             "id": tripper[0],
-#             "name": tripper[1],
-#             "destination": tripper[2],
-#             "costs": tripper[3],
-#             "since": tripper[4],
-#             "till": tripper[5]
-#         }
-#         return render_template('tripper.html', title='<Командировочные', **params), '200 OK'
-
-
-@app.route('/form', methods=['GET', 'POST'])
-def form_test():
-    if request.method == 'GET':
-        with open('templates/form.html', 'r', encoding='utf-8') as h:
-            return h.read()
-    elif request.method == 'POST':
-        result = request.form
-        print(result['gender'])
-        print(result['email'])
-        print(result['accept'])
-        print(result)
-
-        file = request.files['file']
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], file.filename))
-
-        return "Форма успешно отправлена!<br>", '200 OK'
-    return 'Такая тема не воспринимается сервером', '405 METHOD NOT ALLOWED'
+#         return "Форма успешно отправлена!<br>", '200 OK'
+#     return 'Такая тема не воспринимается сервером', '405 METHOD NOT ALLOWED'
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -193,13 +200,18 @@ def file_upload():
 
 @app.errorhandler(404)
 def not_found(e):
-    return render_template('404.html', title='Неизвестная страница'), '404 NOT FOUND'
+    return render_template('errorpage.html', title='Неизвестная страница', code=404), '404 NOT FOUND'
+
+
+@app.errorhandler(500)
+def server_error(e):
+    return (render_template('errorpage.html', title='Ошибка на сайте, к сожалению', code=500),
+            '500 INTERNAL SERVER ERROR')
 
 
 def create_default_admin():
     """Создать админа, если его нет"""
-    users = get_all_users()
-    if not users:
+    if is_users_table_empty():
         admin = User(
             name="admin",
             email="s@w.a",
